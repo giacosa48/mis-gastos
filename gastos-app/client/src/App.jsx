@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo, useCallback } from "react";
 import { api, setToken, setStoredUser, getStoredUser } from "./api";
-import { F, C, MONTHS, fmt, today, curMonth, css, lbl, inp, sel, btn, secT, crd, iconBtn, Ctx, useApp, Modal, Confirm, Pill, TabBar, MonthNav } from "./shared";
+import { F, C, MONTHS, fmt, today, curMonth, css, lbl, inp, sel, btn, secT, crd, iconBtn, Ctx, useApp, Modal, Confirm, Pill, TabBar, MonthNav } from "./shared.jsx";
 
 // ═══ LOGIN ═══
 function Login({ onLogin }) {
