@@ -1,0 +1,12 @@
+services:
+  - type: web
+    name: mis-gastos
+    runtime: node
+    plan: free
+    buildCommand: cd client && npm install && npx vite build && cd ../server && npm install
+    startCommand: cd server && node index.js
+    envVars:
+      - key: NODE_VERSION
+        value: 20.11.0
+      - key: DB_PATH
+        value: /tmp/gastos.db
