@@ -1,82 +1,58 @@
 const BASE = import.meta.env.VITE_API_URL || "";
 
-function getToken() {
-  return localStorage.getItem("gastos_token");
-}
-
-export function setToken(token) {
-  if (token) localStorage.setItem("gastos_token", token);
-  else localStorage.removeItem("gastos_token");
-}
-
-export function getStoredUser() {
-  try {
-    const u = localStorage.getItem("gastos_user");
-    return u ? JSON.parse(u) : null;
-  } catch { return null; }
-}
-
-export function setStoredUser(user) {
-  if (user) localStorage.setItem("gastos_user", JSON.stringify(user));
-  else localStorage.removeItem("gastos_user");
-}
+function getToken() { return localStorage.getItem("gastos_token"); }
+export function setToken(t) { t ? localStorage.setItem("gastos_token", t) : localStorage.removeItem("gastos_token"); }
+export function getStoredUser() { try { return JSON.parse(localStorage.getItem("gastos_user")); } catch { return null; } }
+export function setStoredUser(u) { u ? localStorage.setItem("gastos_user", JSON.stringify(u)) : localStorage.removeItem("gastos_user"); }
 
 async function request(path, options = {}) {
   const headers = { "Content-Type": "application/json" };
   const token = getToken();
   if (token) headers.Authorization = `Bearer ${token}`;
-
   const res = await fetch(`${BASE}${path}`, { headers, ...options });
-  if (res.status === 401) {
-    setToken(null);
-    setStoredUser(null);
-    window.location.reload();
-    throw new Error("Sesión expirada");
-  }
-  if (!res.ok) {
-    const err = await res.json().catch(() => ({ error: res.statusText }));
-    throw new Error(err.error || "Request failed");
-  }
+  if (res.status === 401) { setToken(null); setStoredUser(null); window.location.reload(); throw new Error("Sesión expirada"); }
+  if (!res.ok) { const err = await res.json().catch(() => ({ error: res.statusText })); throw new Error(err.error || "Error"); }
   return res.json();
 }
 
 export const api = {
-  // Auth
-  login: (username, password) => request("/api/auth/login", { method: "POST", body: JSON.stringify({ username, password }) }),
+  login: (u, p) => request("/api/auth/login", { method: "POST", body: JSON.stringify({ username: u, password: p }) }),
   me: () => request("/api/auth/me"),
 
-  // Admin
   getUsers: () => request("/api/admin/users"),
-  createUser: (data) => request("/api/admin/users", { method: "POST", body: JSON.stringify(data) }),
-  updateUser: (id, data) => request(`/api/admin/users/${id}`, { method: "PUT", body: JSON.stringify(data) }),
-  resetPassword: (id, password) => request(`/api/admin/users/${id}/reset-password`, { method: "POST", body: JSON.stringify({ password }) }),
-  deleteUser: (id) => request(`/api/admin/users/${id}`, { method: "DELETE" }),
+  createUser: (d) => request("/api/admin/users", { method: "POST", body: JSON.stringify(d) }),
+  updateUser: (id, d) => request(`/api/admin/users/${id}`, { method: "PUT", body: JSON.stringify(d) }),
+  resetPassword: (id, p) => request(`/api/admin/users/${id}/reset-password`, { method: "POST", body: JSON.stringify({ password: p }) }),
 
-  // Categories
   getCategories: () => request("/api/categories"),
-  addCategory: (data) => request("/api/categories", { method: "POST", body: JSON.stringify(data) }),
-  updateCategory: (id, data) => request(`/api/categories/${id}`, { method: "PUT", body: JSON.stringify(data) }),
+  addCategory: (d) => request("/api/categories", { method: "POST", body: JSON.stringify(d) }),
+  updateCategory: (id, d) => request(`/api/categories/${id}`, { method: "PUT", body: JSON.stringify(d) }),
   deleteCategory: (id) => request(`/api/categories/${id}`, { method: "DELETE" }),
 
-  // Payment Methods
   getPaymentMethods: () => request("/api/payment-methods"),
-  addPaymentMethod: (data) => request("/api/payment-methods", { method: "POST", body: JSON.stringify(data) }),
-  updatePaymentMethod: (id, data) => request(`/api/payment-methods/${id}`, { method: "PUT", body: JSON.stringify(data) }),
+  addPaymentMethod: (d) => request("/api/payment-methods", { method: "POST", body: JSON.stringify(d) }),
+  updatePaymentMethod: (id, d) => request(`/api/payment-methods/${id}`, { method: "PUT", body: JSON.stringify(d) }),
   deletePaymentMethod: (id) => request(`/api/payment-methods/${id}`, { method: "DELETE" }),
 
-  // Credit Cards
   getCreditCards: () => request("/api/credit-cards"),
-  addCreditCard: (data) => request("/api/credit-cards", { method: "POST", body: JSON.stringify(data) }),
-  updateCreditCard: (id, data) => request(`/api/credit-cards/${id}`, { method: "PUT", body: JSON.stringify(data) }),
+  addCreditCard: (d) => request("/api/credit-cards", { method: "POST", body: JSON.stringify(d) }),
+  updateCreditCard: (id, d) => request(`/api/credit-cards/${id}`, { method: "PUT", body: JSON.stringify(d) }),
   deleteCreditCard: (id) => request(`/api/credit-cards/${id}`, { method: "DELETE" }),
 
-  // Expenses
-  getExpenses: (params = {}) => {
-    const qs = new URLSearchParams(params).toString();
-    return request(`/api/expenses?${qs}`);
-  },
-  getCardTotals: (billing_month) => request(`/api/expenses/card-totals?billing_month=${billing_month || ""}`),
-  addExpense: (data) => request("/api/expenses", { method: "POST", body: JSON.stringify(data) }),
-  updateExpense: (id, data) => request(`/api/expenses/${id}`, { method: "PUT", body: JSON.stringify(data) }),
+  getExpenses: (p = {}) => { const q = new URLSearchParams(p).toString(); return request(`/api/expenses?${q}`); },
+  getCardTotals: (m) => request(`/api/expenses/card-totals?billing_month=${m || ""}`),
+  addExpense: (d) => request("/api/expenses", { method: "POST", body: JSON.stringify(d) }),
+  updateExpense: (id, d) => request(`/api/expenses/${id}`, { method: "PUT", body: JSON.stringify(d) }),
   deleteExpense: (id) => request(`/api/expenses/${id}`, { method: "DELETE" }),
+
+  getAlerts: () => request("/api/alerts"),
+  getBalance: (m) => request(`/api/balance?month=${m}`),
+
+  getIncomes: (m) => request(`/api/incomes?month=${m || ""}`),
+  addIncome: (d) => request("/api/incomes", { method: "POST", body: JSON.stringify(d) }),
+  updateIncome: (id, d) => request(`/api/incomes/${id}`, { method: "PUT", body: JSON.stringify(d) }),
+  deleteIncome: (id) => request(`/api/incomes/${id}`, { method: "DELETE" }),
+
+  exportData: () => request("/api/admin/export"),
+  importData: (d) => request("/api/admin/import", { method: "POST", body: JSON.stringify(d) }),
 };
